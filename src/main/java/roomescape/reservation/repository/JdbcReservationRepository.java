@@ -63,7 +63,7 @@ public class JdbcReservationRepository implements ReservationRepository {
 
         long generatedId = keyHolder.getKey().longValue();
         return findById(generatedId)
-                .orElseThrow(() -> new IllegalStateException("서버 오류: 데이터 저장 직후 조회가 실패했습니다. (ID: " + generatedId + ")"));
+                .orElseThrow(() -> new RuntimeException("서버 오류: 데이터 저장 직후 조회가 실패했습니다. (ID: " + generatedId + ")"));
     }
 
     @Override

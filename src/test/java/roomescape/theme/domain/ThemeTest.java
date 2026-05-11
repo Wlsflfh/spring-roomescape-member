@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import roomescape.exception.InvalidDomainStateException;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,7 +30,7 @@ class ThemeTest {
         @DisplayName("이름이 비어있거나 공백이면 예외가 발생한다.")
         void failWhenNameIsBlank(String name) {
             assertThatThrownBy(() -> new Theme(null, name, "설명", "url"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidDomainStateException.class)
                     .hasMessageContaining("테마 이름은(는) 비어 있을 수 없습니다.");
         }
 
@@ -38,7 +39,7 @@ class ThemeTest {
         void failWhenNameIsTooLong() {
             String longName = "a".repeat(256);
             assertThatThrownBy(() -> new Theme(null, longName, "설명", "url"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidDomainStateException.class)
                     .hasMessageContaining("테마 이름은(는) 255자 이하여야 합니다.");
         }
     }
@@ -52,7 +53,7 @@ class ThemeTest {
         @DisplayName("설명이 비어있으면 예외가 발생한다.")
         void failWhenDescriptionIsBlank(String description) {
             assertThatThrownBy(() -> new Theme(null, "이름", description, "url"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidDomainStateException.class)
                     .hasMessageContaining("테마 설명은(는) 비어 있을 수 없습니다.");
         }
 
@@ -61,7 +62,7 @@ class ThemeTest {
         void failWhenDescriptionIsTooLong() {
             String longDescription = "b".repeat(256);
             assertThatThrownBy(() -> new Theme(null, "이름", longDescription, "url"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidDomainStateException.class)
                     .hasMessageContaining("테마 설명은(는) 255자 이하여야 합니다.");
         }
     }
@@ -75,7 +76,7 @@ class ThemeTest {
         @DisplayName("썸네일 URL이 비어있으면 예외가 발생한다.")
         void failWhenUrlIsBlank(String url) {
             assertThatThrownBy(() -> new Theme(null, "이름", "설명", url))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidDomainStateException.class)
                     .hasMessageContaining("테마 썸네일 URL은(는) 비어 있을 수 없습니다.");
         }
 
@@ -84,7 +85,7 @@ class ThemeTest {
         void failWhenUrlIsTooLong() {
             String longUrl = "c".repeat(1025);
             assertThatThrownBy(() -> new Theme(null, "이름", "설명", longUrl))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidDomainStateException.class)
                     .hasMessageContaining("테마 썸네일 URL은(는) 1024자 이하여야 합니다.");
         }
     }

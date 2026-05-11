@@ -35,6 +35,9 @@ INSERT INTO theme (name, description, thumbnail_url) VALUES
 ('드래곤의 동굴', '드래곤이 잠든 사이 고대 룬을 해독해 동굴을 빠져나오세요.', 'https://example.com/themes/dragon-cave.jpg');
 
 INSERT INTO reservation (name, reservation_date, time_id, theme_id) VALUES
+-- 미래
+('진리로', '2026-05-20', 1, 1),
+
 -- 최근 7일 이내 20개 (기준: 2026-05-06)
 ('김민수', '2026-05-05', 1, 1),
 ('이서연', '2026-05-05', 2, 2),

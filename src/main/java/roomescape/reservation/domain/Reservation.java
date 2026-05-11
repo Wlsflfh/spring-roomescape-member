@@ -1,5 +1,6 @@
 package roomescape.reservation.domain;
 
+import roomescape.exception.InvalidDomainStateException;
 import roomescape.theme.domain.Theme;
 import roomescape.time.domain.ReservationTime;
 
@@ -50,7 +51,7 @@ public class Reservation {
 
         LocalDateTime reservationDateTime = LocalDateTime.of(date, time.getStartAt());
         if (reservationDateTime.isBefore(now)) {
-            throw new IllegalArgumentException(
+            throw new InvalidDomainStateException(
                     String.format("과거 시각으로는 예약할 수 없습니다. (요청 일시: %s)", reservationDateTime)
             );
         }
@@ -58,10 +59,10 @@ public class Reservation {
 
     private void validateName(String name) {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("예약자 이름은 비어 있을 수 없습니다.");
+            throw new InvalidDomainStateException("예약자 이름은 비어 있을 수 없습니다.");
         }
         if (name.length() > MAX_NAME_LENGTH) {
-            throw new IllegalArgumentException(
+            throw new InvalidDomainStateException(
                     String.format("이름은 %d글자 이하여야 합니다. (현재 이름의 글자 수: %d)", MAX_NAME_LENGTH, name.length())
             );
         }
@@ -69,7 +70,7 @@ public class Reservation {
 
     private void validateNotNull(Object obj, String message) {
         if (obj == null) {
-            throw new IllegalArgumentException(message);
+            throw new InvalidDomainStateException(message);
         }
     }
 

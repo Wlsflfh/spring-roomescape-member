@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.exception.DuplicateResourceException;
-import roomescape.exception.ResourceInUseException;
 import roomescape.exception.ResourceNotFoundException;
 import roomescape.support.FixedClockConfig;
 import roomescape.time.controller.dto.ReservationTimeRequest;
@@ -110,7 +109,7 @@ class ReservationTimeServiceTest {
         }
 
         @Test
-        @DisplayName("예약에 사용 중인 시간은 ResourceInUseException 이 발생하고 삭제되지 않는다.")
+        @DisplayName("예약에 사용 중인 시간은 DuplicateResourceException 이 발생하고 삭제되지 않는다.")
         void deleteByIdFailWhenInUse() {
             // given
             ReservationTime savedTime = reservationTimeService.save(new ReservationTimeRequest(LocalTime.of(10, 0)));
@@ -119,7 +118,7 @@ class ReservationTimeServiceTest {
 
             // when & then
             assertThatThrownBy(() -> reservationTimeService.deleteById(savedTime.getId()))
-                    .isInstanceOf(ResourceInUseException.class)
+                    .isInstanceOf(DuplicateResourceException.class)
                     .hasMessageContaining("이 시간을 참조하는 예약이 있어 삭제할 수 없습니다.");
 
             assertThat(reservationTimeService.findAll()).hasSize(1);

@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.exception.DuplicateResourceException;
-import roomescape.exception.ResourceInUseException;
 import roomescape.exception.ResourceNotFoundException;
 import roomescape.support.FixedClockConfig;
 import roomescape.theme.controller.dto.ThemeRequest;
@@ -112,7 +111,7 @@ class ThemeServiceTest {
         }
 
         @Test
-        @DisplayName("예약에 사용 중인 테마는 ResourceInUseException 이 발생하고 삭제되지 않는다.")
+        @DisplayName("예약에 사용 중인 테마는 DuplicateResourceException 이 발생하고 삭제되지 않는다.")
         void deleteByIdFailWhenInUse() {
             // given
             Theme saved = themeService.save(new ThemeRequest("테마", "설명", "https://example.com/a.png"));
@@ -121,7 +120,7 @@ class ThemeServiceTest {
 
             // when & then
             assertThatThrownBy(() -> themeService.deleteById(saved.getId()))
-                    .isInstanceOf(ResourceInUseException.class)
+                    .isInstanceOf(DuplicateResourceException.class)
                     .hasMessageContaining("이 테마를 참조하는 예약이 있어 삭제할 수 없습니다.");
 
             assertThat(themeService.findAll()).hasSize(1);

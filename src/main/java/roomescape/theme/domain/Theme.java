@@ -1,5 +1,7 @@
 package roomescape.theme.domain;
 
+import roomescape.exception.InvalidDomainStateException;
+
 public class Theme {
 
     private static final int MAX_NAME_LENGTH = 255;
@@ -31,11 +33,11 @@ public class Theme {
 
     private void validateText(String value, String fieldName, int maxLength) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(String.format("테마 %s은(는) 비어 있을 수 없습니다.", fieldName));
+            throw new InvalidDomainStateException(String.format("테마 %s은(는) 비어 있을 수 없습니다.", fieldName));
         }
 
         if (value.length() > maxLength) {
-            throw new IllegalArgumentException(
+            throw new InvalidDomainStateException(
                     String.format("테마 %s은(는) %d자 이하여야 합니다. (현재 길이: %d)", fieldName, maxLength, value.length())
             );
         }

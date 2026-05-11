@@ -3,7 +3,6 @@ package roomescape.time.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.exception.DuplicateResourceException;
-import roomescape.exception.ResourceInUseException;
 import roomescape.exception.ResourceNotFoundException;
 import roomescape.reservation.repository.ReservationRepository;
 import roomescape.time.controller.dto.ReservationTimeRequest;
@@ -39,7 +38,7 @@ public class ReservationTimeService {
     @Transactional
     public void deleteById(Long id) {
         if (reservationRepository.existsByTimeId(id)) {
-            throw new ResourceInUseException("이 시간을 참조하는 예약이 있어 삭제할 수 없습니다. ID: " + id);
+            throw new DuplicateResourceException("이 시간을 참조하는 예약이 있어 삭제할 수 없습니다. ID: " + id);
         }
 
         reservationTimeRepository.deleteById(id);
