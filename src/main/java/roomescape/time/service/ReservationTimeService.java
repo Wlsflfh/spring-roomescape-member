@@ -11,6 +11,8 @@ import roomescape.time.repository.ReservationTimeRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -48,8 +50,19 @@ public class ReservationTimeService {
         return reservationTimeRepository.findAll();
     }
 
-    public List<ReservationTime> findAvailableTimes(Long themeId, LocalDate date) {
-        return reservationTimeRepository.findAvailableTimes(themeId, date);
+    public List<ReservationTimeResult> getTimesWithBooked(Long themeId, LocalDate date) {
+        List<ReservationTime> allTimes = reservationTimeRepository.findAll();
+        List<ReservationTime> availableTimes = reservationTimeRepository.findAvailableTimes(themeId, date);
+        Set<Long> availableTimeIds = availableTimes.stream()
+                .map(ReservationTime::getId)
+                .collect(Collectors.toSet());
+
+        return allTimes.stream()
+                .map(time -> {
+                    boolean isBooked = !availableTimeIds.contains(time.getId());
+                    return ReservationTimeResult.from(time, isBooked);
+                })
+                .toList();
     }
 
     private void validateDuplicateTime(ReservationTimeRequest request) {

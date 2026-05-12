@@ -302,20 +302,41 @@ button.danger:hover {
   margin-top: 14px;
 }
 .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   background: var(--bg-2);
   border: 1px solid var(--line);
   color: var(--text-1);
-  padding: 8px 16px;
+  padding: 8px 14px 8px 18px;
   border-radius: 999px;
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.06em;
+  cursor: pointer;
   transition: all 0.15s ease;
 }
-.chip:hover {
+.chip .time {
+  font-weight: 500;
+}
+.chip .badge {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--neon-cyan-soft);
+  color: var(--neon-cyan);
+  border: 1px solid transparent;
+}
+.chip:hover:not(:disabled) {
   border-color: var(--neon-cyan);
   color: var(--neon-cyan);
   box-shadow: 0 0 0 1px var(--neon-cyan-soft), 0 0 16px var(--neon-cyan-soft);
+}
+.chip:hover:not(:disabled) .badge {
+  background: var(--neon-cyan);
+  color: #0a0d1a;
 }
 .chip.selected {
   background: var(--neon-cyan);
@@ -323,11 +344,47 @@ button.danger:hover {
   border-color: var(--neon-cyan);
   box-shadow: 0 0 18px var(--neon-cyan-soft);
 }
+
+/* booked: 이미 예약된 슬롯 — 흐림 + 비활성 */
+.chip.booked {
+  background: transparent;
+  border-color: var(--line-soft);
+  color: var(--text-3);
+  cursor: not-allowed;
+  opacity: 0.55;
+  text-decoration: line-through;
+  text-decoration-color: var(--text-3);
+}
+.chip.booked .badge {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+.chip.booked:hover {
+  box-shadow: none;
+  border-color: var(--line-soft);
+  color: var(--text-3);
+}
+
+/* pending: 사용자가 클릭한 후 응답 대기 */
+.chip.pending {
+  opacity: 0.6;
+  cursor: progress;
+}
+
 .chip-empty {
   color: var(--text-3);
   font-family: var(--font-mono);
   font-size: 13px;
   padding: 8px 0;
+}
+.chip-summary {
+  width: 100%;
+  margin: 0 0 4px;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
 }
 
 /* ─── Rank list (Popular themes) ─── */

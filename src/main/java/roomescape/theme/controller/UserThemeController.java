@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import roomescape.theme.controller.dto.ThemeResponse;
 import roomescape.theme.service.ThemeService;
-import roomescape.time.controller.dto.ReservationTimeResponse;
+import roomescape.time.controller.dto.AvailableTimeResponse;
 import roomescape.time.service.ReservationTimeService;
 
 import java.time.LocalDate;
@@ -44,15 +44,14 @@ public class UserThemeController {
     }
 
     @GetMapping("/{themeId}/available-times")
-    public ResponseEntity<List<ReservationTimeResponse>> readAvailable(
+    public ResponseEntity<List<AvailableTimeResponse>> readAvailable(
             @PathVariable Long themeId,
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
-        List<ReservationTimeResponse> responses =
-                reservationTimeService.findAvailableTimes(themeId, date)
-                        .stream()
-                        .map(ReservationTimeResponse::from)
-                        .toList();
+        List<AvailableTimeResponse> responses = reservationTimeService.getTimesWithBooked(themeId, date)
+                .stream()
+                .map(AvailableTimeResponse::from)
+                .toList();
         return ResponseEntity.ok(responses);
     }
 }

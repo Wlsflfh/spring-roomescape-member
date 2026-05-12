@@ -4,7 +4,8 @@
  * 백엔드 API
  *  - GET    /themes                                  : 테마 목록
  *  - GET    /themes/popular                          : 최근 7일 인기 테마
- *  - GET    /themes/{themeId}/available-times?date=  : 특정 테마/날짜의 예약 가능 시간
+ *  - GET    /themes/{themeId}/available-times?date=  : 시간 슬롯 (각각 booked 여부 포함)
+ *      응답: [{ id, startAt: "HH:mm", booked: boolean }, ...]
  *  - POST   /reservations                            : 예약 생성
  */
 const $ = (selector) => document.querySelector(selector);
@@ -13,8 +14,11 @@ const $$ = (selector) => document.querySelectorAll(selector);
 const state = {
   themes: [],
   selectedThemeId: null,
-  availableTimes: []
+  /** [{ id, startAt, booked }] — 모든 시간 슬롯 (booked 여부 포함) */
+  timeSlots: []
 };
+
+/* ───────── HTTP ───────── */
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -37,6 +41,8 @@ async function api(path, options = {}) {
   return response.json();
 }
 
+/* ───────── Messages ───────── */
+
 function setMessage(message, isError = false) {
   const el = $("#message");
   el.textContent = message;
@@ -53,6 +59,21 @@ function clearSuccess() {
   const box = $("#reservationSuccess");
   box.textContent = "";
   box.classList.remove("visible");
+}
+
+/* ───────── Helpers ───────── */
+
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeAttr(str) {
+  return escapeHtml(str);
 }
 
 /* ───────── Theme grid ───────── */
@@ -89,15 +110,16 @@ function selectTheme(themeId) {
   $$("#themeGrid .theme-card").forEach((card) => {
     card.classList.toggle("selected", Number(card.dataset.themeId) === themeId);
   });
-  // 선택이 바뀌면 이전 가용 시간 표시는 무효화
-  state.availableTimes = [];
-  renderAvailableTimes();
+  // 테마가 바뀌면 이전 시간 표시는 무효화 → 자동 재조회
+  state.timeSlots = [];
+  renderTimeSlots();
   clearSuccess();
+  refreshTimeSlotsIfReady();
 }
 
-/* ───────── Available times ───────── */
+/* ───────── Time slots ───────── */
 
-function renderAvailableTimes() {
+function renderTimeSlots() {
   const root = $("#availableTimes");
   root.innerHTML = "";
 
@@ -105,23 +127,40 @@ function renderAvailableTimes() {
     root.innerHTML = '<p class="chip-empty">먼저 테마를 선택해 줘.</p>';
     return;
   }
-  if (state.availableTimes.length === 0) {
-    root.innerHTML = '<p class="chip-empty">날짜 입력 후 [예약 가능 시간 조회]를 눌러 줘.</p>';
+  if (state.timeSlots.length === 0) {
+    root.innerHTML = '<p class="chip-empty">등록된 시간이 없습니다.</p>';
     return;
   }
 
-  state.availableTimes.forEach((time) => {
+  // 통계 한 줄 (선택)
+  const totalCount = state.timeSlots.length;
+  const bookedCount = state.timeSlots.filter((s) => s.booked).length;
+  const summary = document.createElement("p");
+  summary.className = "chip-summary";
+  summary.textContent = `총 ${totalCount}개 슬롯 · 예약 가능 ${totalCount - bookedCount} · 마감 ${bookedCount}`;
+  root.appendChild(summary);
+
+  state.timeSlots.forEach((slot) => {
     const button = document.createElement("button");
-    button.className = "chip";
     button.type = "button";
-    button.dataset.timeId = time.id;
-    button.dataset.startAt = time.startAt;
-    button.textContent = `${time.startAt} 예약하기`;
+    button.className = slot.booked ? "chip booked" : "chip";
+    button.dataset.timeId = slot.id;
+    button.dataset.startAt = slot.startAt;
+
+    if (slot.booked) {
+      button.disabled = true;
+      button.title = "이미 예약된 시간입니다.";
+      button.innerHTML = `<span class="time">${escapeHtml(slot.startAt)}</span><span class="badge">예약 마감</span>`;
+    } else {
+      button.title = `${slot.startAt} 에 예약하기`;
+      button.innerHTML = `<span class="time">${escapeHtml(slot.startAt)}</span><span class="badge">예약하기</span>`;
+    }
+
     root.appendChild(button);
   });
 }
 
-async function loadAvailableTimes() {
+async function loadTimeSlots() {
   const date = $('input[name="date"]').value;
   const themeId = state.selectedThemeId;
 
@@ -134,8 +173,26 @@ async function loadAvailableTimes() {
     return;
   }
 
-  state.availableTimes = await api(`/themes/${themeId}/available-times?date=${date}`);
-  renderAvailableTimes();
+  state.timeSlots = await api(`/themes/${themeId}/available-times?date=${date}`);
+  renderTimeSlots();
+}
+
+/** 테마와 날짜가 모두 채워진 상태일 때만 자동 조회 — 부수효과는 메시지만 갱신. */
+async function refreshTimeSlotsIfReady() {
+  const date = $('input[name="date"]').value;
+  if (!state.selectedThemeId || !date) return;
+  try {
+    await loadTimeSlots();
+    const total = state.timeSlots.length;
+    const open = state.timeSlots.filter((s) => !s.booked).length;
+    if (total === 0) {
+      setMessage("등록된 시간 슬롯이 없습니다. 관리자에게 문의해 주세요.");
+    } else {
+      setMessage(`${total}개 슬롯 중 ${open}개가 예약 가능합니다.`);
+    }
+  } catch (error) {
+    setMessage(error.message, true);
+  }
 }
 
 /* ───────── Popular themes ───────── */
@@ -171,46 +228,24 @@ async function loadPopularThemes() {
   renderPopularThemes(popular);
 }
 
-/* ───────── Helpers ───────── */
-
-function escapeHtml(str) {
-  return String(str ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function escapeAttr(str) {
-  return escapeHtml(str);
-}
-
 /* ───────── Event wiring ───────── */
 
 $("#themeGrid").addEventListener("click", (event) => {
   const card = event.target.closest(".theme-card[data-theme-id]");
   if (!card) return;
   selectTheme(Number(card.dataset.themeId));
-  setMessage(`테마 #${card.dataset.themeId} 를 선택했습니다.`);
 });
 
-$("#loadTimes").addEventListener("click", async () => {
-  try {
-    await loadAvailableTimes();
-    if (state.availableTimes.length === 0) {
-      setMessage("해당 날짜/테마에 예약 가능한 시간이 없습니다.");
-    } else {
-      setMessage(`${state.availableTimes.length}개의 시간을 조회했습니다.`);
-    }
-  } catch (error) {
-    setMessage(error.message, true);
-  }
+// 날짜를 바꿀 때마다 자동으로 시간 재조회 (테마가 선택된 경우)
+$('input[name="date"]').addEventListener("change", () => {
+  clearSuccess();
+  refreshTimeSlotsIfReady();
 });
 
 $("#availableTimes").addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-time-id]");
   if (!button) return;
+  if (button.classList.contains("booked") || button.disabled) return;
 
   const name = $('input[name="name"]').value.trim();
   const date = $('input[name="date"]').value;
@@ -224,6 +259,10 @@ $("#availableTimes").addEventListener("click", async (event) => {
     setMessage("날짜와 테마를 모두 선택해 주세요.", true);
     return;
   }
+
+  // optimistic UI: 클릭한 버튼을 잠시 비활성화
+  button.disabled = true;
+  button.classList.add("pending");
 
   try {
     const created = await api("/reservations", {
@@ -241,10 +280,12 @@ $("#availableTimes").addEventListener("click", async (event) => {
     );
     setMessage("예약이 정상적으로 완료되었습니다.");
 
-    await loadAvailableTimes();
-    await loadPopularThemes();
+    // 시간 슬롯과 인기 테마 갱신
+    await Promise.all([loadTimeSlots(), loadPopularThemes()]);
   } catch (error) {
     setMessage(error.message, true);
+    button.disabled = false;
+    button.classList.remove("pending");
   }
 });
 

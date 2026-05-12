@@ -14,7 +14,7 @@
   <header class="hero">
     <p class="eyebrow">// Roomescape · Booking Console</p>
     <h1>방을 고르고, 시간을 잡아라.</h1>
-    <p>테마를 선택하고 날짜를 입력하면, 비어 있는 시각을 알려줄게. 자정 이전에 결정해야 할걸.</p>
+    <p>테마를 선택하고 날짜를 입력하면, 비어 있는 시각이 즉시 표시된다. 흐리게 표시된 시간은 이미 마감된 슬롯.</p>
     <p><a class="admin-link" href="/admin">⌘ 관리자 콘솔</a></p>
   </header>
 
@@ -25,8 +25,8 @@
   </section>
 
   <section class="panel">
-    <h2>2 · 예약 가능 시간 조회</h2>
-    <p class="panel-sub">날짜를 입력하면 위에서 고른 테마의 비어있는 시각이 나타난다.</p>
+    <h2>2 · 날짜 / 이름 입력</h2>
+    <p class="panel-sub">날짜를 바꾸면 위 테마의 시간 슬롯이 자동으로 갱신된다.</p>
     <form class="grid-form" id="reservationForm" onsubmit="return false;">
       <div class="field">
         <label>예약자 이름</label>
@@ -36,12 +36,14 @@
         <label>날짜</label>
         <input name="date" required type="date" />
       </div>
-      <div class="field" style="grid-column: span 2; align-self: end;">
-        <button id="loadTimes" type="button" class="primary">예약 가능 시간 조회</button>
-      </div>
     </form>
+  </section>
+
+  <section class="panel">
+    <h2>3 · 시간 선택</h2>
+    <p class="panel-sub">예약 가능한 슬롯만 클릭할 수 있다. 마감된 슬롯은 흐리게 표시된다.</p>
     <div class="chips" id="availableTimes">
-      <p class="chip-empty">날짜와 테마를 먼저 선택해 줘.</p>
+      <p class="chip-empty">먼저 테마를 선택해 줘.</p>
     </div>
     <div class="success-box" id="reservationSuccess"></div>
   </section>
@@ -49,11 +51,11 @@
   <section class="panel">
     <div class="section-header">
       <div>
-        <h2>3 · 최근 1주 인기 테마</h2>
+        <h2>4 · 최근 1주 인기 테마</h2>
         <p class="panel-sub" style="margin-bottom: 0;">예약자가 많은 순서대로.</p>
       </div>
       <div class="actions">
-        <button class="ghost" id="loadPopular">새로고침</button>
+        <button class="ghost" id="loadPopular" type="button">새로고침</button>
       </div>
     </div>
     <ol class="rank-list" id="popularThemes"></ol>

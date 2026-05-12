@@ -111,7 +111,7 @@ class ThemeServiceTest {
         }
 
         @Test
-        @DisplayName("예약에 사용 중인 테마는 DuplicateResourceException 이 발생하고 삭제되지 않는다.")
+        @DisplayName("예약에 사용 중인 테마는 ResourceInUseException 이 발생하고 삭제되지 않는다.")
         void deleteByIdFailWhenInUse() {
             // given
             Theme saved = themeService.save(new ThemeRequest("테마", "설명", "https://example.com/a.png"));

@@ -109,7 +109,7 @@ class ReservationTimeServiceTest {
         }
 
         @Test
-        @DisplayName("예약에 사용 중인 시간은 DuplicateResourceException 이 발생하고 삭제되지 않는다.")
+        @DisplayName("예약에 사용 중인 시간은 ResourceInUseException 이 발생하고 삭제되지 않는다.")
         void deleteByIdFailWhenInUse() {
             // given
             ReservationTime savedTime = reservationTimeService.save(new ReservationTimeRequest(LocalTime.of(10, 0)));
@@ -152,12 +152,12 @@ class ReservationTimeServiceTest {
     }
 
     @Nested
-    @DisplayName("findAvailableTimes 메서드는")
-    class FindAvailableTimes {
+    @DisplayName("getTimesWithBooked 메서드는")
+    class GetTimesWithBooked {
 
         @Test
-        @DisplayName("주어진 날짜/테마에 이미 예약된 시간은 제외하고 반환한다.")
-        void findAvailableTimesExcludesBooked() {
+        @DisplayName("모든 시간 슬롯을 반환하되, 주어진 날짜/테마에 예약된 슬롯은 booked=true 로 표시한다.")
+        void getTimesWithBookedFlagsReservedSlots() {
             // given
             ReservationTime t10 = reservationTimeService.save(new ReservationTimeRequest(LocalTime.of(10, 0)));
             ReservationTime t11 = reservationTimeService.save(new ReservationTimeRequest(LocalTime.of(11, 0)));
@@ -168,11 +168,34 @@ class ReservationTimeServiceTest {
             insertReservation("브라운", date, t11.getId(), themeId);
 
             // when
-            List<ReservationTime> available = reservationTimeService.findAvailableTimes(themeId, date);
+            List<ReservationTimeResult> results = reservationTimeService.getTimesWithBooked(themeId, date);
+
+            // then — 모든 슬롯 반환 + 11시만 booked
+            assertThat(results).hasSize(3);
+            assertThat(results).extracting(r -> r.time().getStartAt())
+                    .containsExactly(LocalTime.of(10, 0), LocalTime.of(11, 0), LocalTime.of(12, 0));
+            assertThat(results).extracting(ReservationTimeResult::isBooked)
+                    .containsExactly(false, true, false);
+        }
+
+        @Test
+        @DisplayName("동일 시간이라도 다른 테마 / 다른 날짜의 예약이면 booked=false 로 표시한다.")
+        void getTimesWithBookedScopedByThemeAndDate() {
+            // given
+            ReservationTime t10 = reservationTimeService.save(new ReservationTimeRequest(LocalTime.of(10, 0)));
+            Long themeA = insertTheme("A", "설명", "https://example.com/a.png");
+            Long themeB = insertTheme("B", "설명", "https://example.com/b.png");
+            LocalDate date = LocalDate.of(2026, 12, 31);
+
+            // 테마 A 에만 예약 존재
+            insertReservation("브라운", date, t10.getId(), themeA);
+
+            // when — 테마 B 로 조회
+            List<ReservationTimeResult> results = reservationTimeService.getTimesWithBooked(themeB, date);
 
             // then
-            assertThat(available).extracting(ReservationTime::getStartAt)
-                    .containsExactly(LocalTime.of(10, 0), LocalTime.of(12, 0));
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).isBooked()).isFalse();
         }
     }
 
